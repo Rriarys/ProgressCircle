@@ -4,7 +4,11 @@
   <meta charset="UTF-8" />
   <title>Progress Tracker</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
     input, button {
       margin: 0.2rem 0;
       padding: 0.4rem;
@@ -43,22 +47,42 @@
       z-index: 2;
       pointer-events: none;
     }
-    .small { font-size: 0.8em; color: #666; }
-
-    /* Для инпутов и кнопок внутри диаграмм */
+    .small {
+      font-size: 0.8em;
+      color: #666;
+    }
+    .time-info {
+      margin-top: 0.6rem;
+      font-weight: bold;
+      font-family: sans-serif;
+      white-space: nowrap;
+    }
     .inputs-row {
       display: flex;
       gap: 0.5rem;
-      margin-top: 0.5rem;
+      margin-top: 0.6rem;
       flex-wrap: wrap;
+      align-items: center;
     }
     .inputs-row input {
-      flex: 1 1 80px;
+      flex: 1 1 auto;
       width: auto;
+    }
+    input.min-input {
+      width: 45px;
+      min-width: 45px;
+    }
+    input.hours-input {
+      width: 70px;
+      min-width: 70px;
     }
     .inputs-row button {
       width: 4.5rem;
       flex-shrink: 0;
+    }
+    .error-text {
+      color: red;
+      font-size: 0.8rem;
     }
   </style>
 </head>
@@ -83,8 +107,8 @@
     function formatDisplayTime(totalMinutes) {
       const h = Math.floor(totalMinutes / 60);
       const m = totalMinutes % 60;
-      if (m === 0) return `${h}hrs`;
-      return `${h}hrs ${m}min`;
+      if (m === 0) return `${h} hrs`;
+      return `${h} hrs ${m} min`;
     }
 
     async function fetchDiagrams() {
@@ -112,14 +136,29 @@
             <div class="fill" style="width:${percentBase}%"></div>
             ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
           </div>
-          <div>${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
+          <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
           <div class="inputs-row">
             <input placeholder="AccessKey" id="key-${d.name}" />
-            <input type="number" min="0" max="9999" placeholder="Add hours" id="add-hours-${d.name}" maxlength="4" />
-            <input type="number" min="0" max="59" placeholder="Add minutes" id="add-minutes-${d.name}" maxlength="2" />
+            <input
+              type="number"
+              min="0"
+              max="1000"
+              placeholder="hrs"
+              class="hours-input"
+              id="add-hours-${d.name}"
+            />
+            <input
+              type="number"
+              min="0"
+              max="59"
+              placeholder="min"
+              class="min-input"
+              id="add-minutes-${d.name}"
+            />
             <button onclick="updateDiagram('${d.name}')">Add</button>
             <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
           </div>
+          <div class="error-text" id="error-${d.name}"></div>
         `;
 
         list.appendChild(container);
@@ -139,7 +178,7 @@
       const description = document.getElementById('description').value.trim();
       const targetRaw = document.getElementById('target').value;
 
-      const target = validateInput(targetRaw, 100000); // допуск большой, чтобы не было лишних ограничений
+      const target = validateInput(targetRaw, 100000);
 
       if (!name || !description || target <= 0) {
         alert('Please fill all fields with valid data.');
@@ -165,17 +204,32 @@
       const accessKey = document.getElementById('key-' + name).value.trim();
       const addHoursRaw = document.getElementById(`add-hours-${name}`).value;
       const addMinutesRaw = document.getElementById(`add-minutes-${name}`).value;
+      const errorDiv = document.getElementById(`error-${name}`);
 
-      const addHours = validateInput(addHoursRaw, 9999);
-      const addMinutes = validateInput(addMinutesRaw, 59);
-      const minutes = addHours * 60 + addMinutes;
+      const addHours = parseInt(addHoursRaw);
+      const addMinutes = parseInt(addMinutesRaw);
+
+      // Очистка ошибки
+      errorDiv.textContent = '';
 
       if (!accessKey) {
-        alert('AccessKey required');
+        errorDiv.textContent = 'AccessKey required.';
         return;
       }
+
+      if (isNaN(addHours) || addHours < 0 || addHours > 1000) {
+        errorDiv.textContent = 'Hours must be between 0 and 1000.';
+        return;
+      }
+
+      if (isNaN(addMinutes) || addMinutes < 0 || addMinutes > 59) {
+        errorDiv.textContent = 'Minutes must be between 0 and 59.';
+        return;
+      }
+
+      const minutes = addHours * 60 + addMinutes;
       if (minutes === 0) {
-        alert('Add hours or minutes must be greater than zero');
+        errorDiv.textContent = 'Add hours or minutes must be greater than zero.';
         return;
       }
 
@@ -187,10 +241,9 @@
 
       const result = await res.json();
       if (res.ok) {
-        alert('Updated!');
         fetchDiagrams();
       } else {
-        alert(result.detail || 'Error updating diagram');
+        errorDiv.textContent = result.detail || 'Error updating diagram';
       }
     }
 
@@ -211,7 +264,6 @@
 
       const result = await res.json();
       if (res.ok) {
-        alert('Deleted!');
         fetchDiagrams();
       } else {
         alert(result.detail || 'Error deleting diagram');
@@ -220,6 +272,5 @@
 
     fetchDiagrams();
   </script>
-
 </body>
 </html>
