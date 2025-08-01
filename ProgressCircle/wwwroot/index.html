@@ -8,8 +8,8 @@
     input, button {
       margin: 0.2rem 0;
       padding: 0.4rem;
-      width: 100%;
       box-sizing: border-box;
+      width: 100%;
     }
     .diagram {
       border: 1px solid #ccc;
@@ -45,14 +45,15 @@
     }
     .small { font-size: 0.8em; color: #666; }
 
-    /* Обернём AccessKey и Add minutes в контейнер для отступов */
+    /* Для инпутов и кнопок внутри диаграмм */
     .inputs-row {
       display: flex;
       gap: 0.5rem;
       margin-top: 0.5rem;
+      flex-wrap: wrap;
     }
     .inputs-row input {
-      flex: 1;
+      flex: 1 1 80px;
       width: auto;
     }
     .inputs-row button {
@@ -79,6 +80,13 @@
   <script>
     let diagrams = [];
 
+    function formatDisplayTime(totalMinutes) {
+      const h = Math.floor(totalMinutes / 60);
+      const m = totalMinutes % 60;
+      if (m === 0) return `${h}hrs`;
+      return `${h}hrs ${m}min`;
+    }
+
     async function fetchDiagrams() {
       const res = await fetch('/diagrams');
       diagrams = await res.json();
@@ -104,10 +112,11 @@
             <div class="fill" style="width:${percentBase}%"></div>
             ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
           </div>
-          <div>${d.accumulatedMinutes} / ${d.targetMinutes} minutes (${percentRaw.toFixed(0)}%)</div>
+          <div>${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
           <div class="inputs-row">
             <input placeholder="AccessKey" id="key-${d.name}" />
-            <input type="number" placeholder="Add minutes" id="add-${d.name}" />
+            <input type="number" min="0" max="9999" placeholder="Add hours" id="add-hours-${d.name}" maxlength="4" />
+            <input type="number" min="0" max="59" placeholder="Add minutes" id="add-minutes-${d.name}" maxlength="2" />
             <button onclick="updateDiagram('${d.name}')">Add</button>
             <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
           </div>
@@ -117,12 +126,22 @@
       });
     }
 
+    function validateInput(input, max) {
+      if (input === '' || isNaN(input)) return 0;
+      let val = parseInt(input);
+      if (val < 0) val = 0;
+      if (val > max) val = max;
+      return val;
+    }
+
     async function createDiagram() {
       const name = document.getElementById('name').value.trim();
       const description = document.getElementById('description').value.trim();
-      const target = parseInt(document.getElementById('target').value);
+      const targetRaw = document.getElementById('target').value;
 
-      if (!name || !description || !target || target <= 0) {
+      const target = validateInput(targetRaw, 100000); // допуск большой, чтобы не было лишних ограничений
+
+      if (!name || !description || target <= 0) {
         alert('Please fill all fields with valid data.');
         return;
       }
@@ -144,15 +163,19 @@
 
     async function updateDiagram(name) {
       const accessKey = document.getElementById('key-' + name).value.trim();
-      const minutesStr = document.getElementById('add-' + name).value;
-      const minutes = parseInt(minutesStr);
+      const addHoursRaw = document.getElementById(`add-hours-${name}`).value;
+      const addMinutesRaw = document.getElementById(`add-minutes-${name}`).value;
+
+      const addHours = validateInput(addHoursRaw, 9999);
+      const addMinutes = validateInput(addMinutesRaw, 59);
+      const minutes = addHours * 60 + addMinutes;
 
       if (!accessKey) {
         alert('AccessKey required');
         return;
       }
-      if (!minutesStr || isNaN(minutes) || minutes === 0) {
-        alert('Add minutes must be a non-zero number');
+      if (minutes === 0) {
+        alert('Add hours or minutes must be greater than zero');
         return;
       }
 
