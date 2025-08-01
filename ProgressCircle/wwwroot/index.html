@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Progress Tracker</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; }
+    input, button {
+      margin: 0.2rem 0;
+      padding: 0.4rem;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .diagram {
+      border: 1px solid #ccc;
+      padding: 1rem;
+      margin-top: 1rem;
+      border-radius: 5px;
+    }
+    .bar {
+      position: relative;
+      height: 20px;
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .fill {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .overflow-fill {
+      position: absolute;
+      height: 100%;
+      background: #2196f3;
+      border-radius: 10px;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .small { font-size: 0.8em; color: #666; }
+
+    /* Обернём AccessKey и Add minutes в контейнер для отступов */
+    .inputs-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .inputs-row input {
+      flex: 1;
+      width: auto;
+    }
+    .inputs-row button {
+      width: 4.5rem;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📈 Progress Tracker</h1>
+
+  <h3>Create new diagram</h3>
+  <div>
+    <input id="name" placeholder="Name" />
+    <input id="description" placeholder="Description" />
+    <input id="target" type="number" placeholder="Target minutes" />
+    <button onclick="createDiagram()">Create</button>
+  </div>
+
+  <h3>Diagrams</h3>
+  <div id="list">Loading...</div>
+
+  <script>
+    let diagrams = [];
+
+    async function fetchDiagrams() {
+      const res = await fetch('/diagrams');
+      diagrams = await res.json();
+      renderDiagrams();
+    }
+
+    function renderDiagrams() {
+      const list = document.getElementById('list');
+      list.innerHTML = '';
+
+      diagrams.forEach(d => {
+        const percentRaw = (d.accumulatedMinutes / d.targetMinutes) * 100;
+        const percentBase = Math.min(100, percentRaw);
+        const percentOverflow = percentRaw > 100 ? percentRaw - 100 : 0;
+
+        const container = document.createElement('div');
+        container.className = 'diagram';
+
+        container.innerHTML = `
+          <strong>${d.name}</strong><br/>
+          <span class="small">${d.description}</span><br/>
+          <div class="bar">
+            <div class="fill" style="width:${percentBase}%"></div>
+            ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
+          </div>
+          <div>${d.accumulatedMinutes} / ${d.targetMinutes} minutes (${percentRaw.toFixed(0)}%)</div>
+          <div class="inputs-row">
+            <input placeholder="AccessKey" id="key-${d.name}" />
+            <input type="number" placeholder="Add minutes" id="add-${d.name}" />
+            <button onclick="updateDiagram('${d.name}')">Add</button>
+            <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
+          </div>
+        `;
+
+        list.appendChild(container);
+      });
+    }
+
+    async function createDiagram() {
+      const name = document.getElementById('name').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const target = parseInt(document.getElementById('target').value);
+
+      if (!name || !description || !target || target <= 0) {
+        alert('Please fill all fields with valid data.');
+        return;
+      }
+
+      const res = await fetch('/diagrams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description, targetMinutes: target })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert('Created! AccessKey: ' + result.accessKey);
+        fetchDiagrams();
+      } else {
+        alert(result.detail || 'Error creating diagram');
+      }
+    }
+
+    async function updateDiagram(name) {
+      const accessKey = document.getElementById('key-' + name).value.trim();
+      const minutesStr = document.getElementById('add-' + name).value;
+      const minutes = parseInt(minutesStr);
+
+      if (!accessKey) {
+        alert('AccessKey required');
+        return;
+      }
+      if (!minutesStr || isNaN(minutes) || minutes === 0) {
+        alert('Add minutes must be a non-zero number');
+        return;
+      }
+
+      const res = await fetch('/diagrams', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, accumulatedMinutes: minutes, accessKey })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert('Updated!');
+        fetchDiagrams();
+      } else {
+        alert(result.detail || 'Error updating diagram');
+      }
+    }
+
+    async function deleteDiagram(name) {
+      if (!confirm(`Delete diagram "${name}"? This action cannot be undone.`)) return;
+
+      const accessKey = document.getElementById('key-' + name).value.trim();
+      if (!accessKey) {
+        alert('AccessKey required to delete');
+        return;
+      }
+
+      const res = await fetch('/diagrams', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, accessKey })
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert('Deleted!');
+        fetchDiagrams();
+      } else {
+        alert(result.detail || 'Error deleting diagram');
+      }
+    }
+
+    fetchDiagrams();
+  </script>
+
+</body>
+</html>

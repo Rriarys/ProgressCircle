@@ -11,7 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+//app.MapGet("/", () => "Hello World!");
 
 // GET /diagrams[?name=optional]
 app.MapGet("/diagrams", async (AppDbContext db, string? name) =>
@@ -170,5 +170,8 @@ app.MapDelete("/diagrams", async (HttpContext context, AppDbContext db) =>
         return Results.Problem($"Internal server error: {ex.Message}");
     }
 });
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.Run();
