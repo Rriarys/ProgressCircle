@@ -39,6 +39,7 @@
             font-family: sans-serif;
             max-width: 600px;
             margin: 2rem auto;
+            padding-top: 50px; 
             transition: background 0.3s, color 0.3s;
             position: relative;
         }
@@ -138,13 +139,22 @@
 
         #theme-toggle {
             position: absolute;
-            float: right;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
             background: none;
             border: none;
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             cursor: pointer;
-            margin-left: 1rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+            z-index: 9999;
         }
+
+            #theme-toggle:hover {
+                background: rgba(0, 0, 0, 0.1);
+            }
 
         /* Модалка */
         .modal {
@@ -236,7 +246,10 @@
     </style>
 </head>
 <body>
-    <h1>📈 Progress Tracker <button id="theme-toggle" onclick="toggleTheme()">🌙</button></h1>
+
+    <button id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <h1>📈 Progress Tracker</h1>
+
 
     <h3>Create new diagram</h3>
     <div>
@@ -306,22 +319,22 @@
                 container.className = 'diagram';
 
                 container.innerHTML = `
-                  <strong>${d.name}</strong><br/>
-                  <span class="small">${d.description}</span><br/>
-                  <div class="bar">
-                    <div class="fill" style="width:${percentBase}%"></div>
-                    ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
-                  </div>
-                  <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
-                  <div class="inputs-row">
-                    <input placeholder="AccessKey" id="key-${d.name}" />
-                    <input type="number" min="-100" max="100" placeholder="hrs" class="hours-input" id="add-hours-${d.name}" />
-                    <input type="number" min="-59" max="59" placeholder="min" class="min-input" id="add-minutes-${d.name}" />
-                    <button onclick="updateDiagram('${d.name}')">Add</button>
-                    <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
-                  </div>
-                  <div class="error-text" id="error-${d.name}"></div>
-                `;
+                          <strong>${d.name}</strong><br/>
+                          <span class="small">${d.description}</span><br/>
+                          <div class="bar">
+                            <div class="fill" style="width:${percentBase}%"></div>
+                            ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
+                          </div>
+                          <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
+                          <div class="inputs-row">
+                            <input placeholder="AccessKey" id="key-${d.name}" />
+                            <input type="number" min="-100" max="100" placeholder="hrs" class="hours-input" id="add-hours-${d.name}" />
+                            <input type="number" min="-59" max="59" placeholder="min" class="min-input" id="add-minutes-${d.name}" />
+                            <button onclick="updateDiagram('${d.name}')">Add</button>
+                            <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
+                          </div>
+                          <div class="error-text" id="error-${d.name}"></div>
+                        `;
 
                 list.appendChild(container);
             });
@@ -438,7 +451,7 @@
             const copyBtn = document.getElementById('copy-btn');
 
             msg.textContent = key;
-            copyBtn.textContent = 'Скопировать';
+            copyBtn.textContent = 'На мобиле эта кнопка не работает, копируй через зажатие пальцем';
             modal.style.display = 'flex';
 
             // Сброс текста кнопки копирования если закрывали ранее
@@ -456,7 +469,7 @@
                 copyBtn.disabled = true;
                 setTimeout(() => {
                     if (copyBtn) {
-                        copyBtn.textContent = 'Скопировать';
+                        copyBtn.textContent = 'На мобиле эта кнопка не работает, копируй через зажатие пальцем';
                         copyBtn.disabled = false;
                     }
                 }, 1500);
