@@ -87,7 +87,6 @@
   </style>
 </head>
 <body>
-
   <h1>📈 Progress Tracker</h1>
 
   <h3>Create new diagram</h3>
@@ -139,22 +138,8 @@
           <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
           <div class="inputs-row">
             <input placeholder="AccessKey" id="key-${d.name}" />
-            <input
-              type="number"
-              min="0"
-              max="1000"
-              placeholder="hrs"
-              class="hours-input"
-              id="add-hours-${d.name}"
-            />
-            <input
-              type="number"
-              min="0"
-              max="59"
-              placeholder="min"
-              class="min-input"
-              id="add-minutes-${d.name}"
-            />
+            <input type="number" min="-100" max="100" placeholder="hrs" class="hours-input" id="add-hours-${d.name}" />
+            <input type="number" min="-59" max="59" placeholder="min" class="min-input" id="add-minutes-${d.name}" />
             <button onclick="updateDiagram('${d.name}')">Add</button>
             <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
           </div>
@@ -165,22 +150,13 @@
       });
     }
 
-    function validateInput(input, max) {
-      if (input === '' || isNaN(input)) return 0;
-      let val = parseInt(input);
-      if (val < 0) val = 0;
-      if (val > max) val = max;
-      return val;
-    }
-
     async function createDiagram() {
       const name = document.getElementById('name').value.trim();
       const description = document.getElementById('description').value.trim();
       const targetRaw = document.getElementById('target').value;
+      const target = parseInt(targetRaw);
 
-      const target = validateInput(targetRaw, 100000);
-
-      if (!name || !description || target <= 0) {
+      if (!name || !description || isNaN(target) || target <= 0) {
         alert('Please fill all fields with valid data.');
         return;
       }
@@ -205,11 +181,6 @@
       const addHoursRaw = document.getElementById(`add-hours-${name}`).value;
       const addMinutesRaw = document.getElementById(`add-minutes-${name}`).value;
       const errorDiv = document.getElementById(`error-${name}`);
-
-      const addHours = parseInt(addHoursRaw);
-      const addMinutes = parseInt(addMinutesRaw);
-
-      // Очистка ошибки
       errorDiv.textContent = '';
 
       if (!accessKey) {
@@ -217,19 +188,30 @@
         return;
       }
 
-      if (isNaN(addHours) || addHours < 0 || addHours > 1000) {
-        errorDiv.textContent = 'Hours must be between 0 and 1000.';
+      const hasHours = addHoursRaw.trim() !== '';
+      const hasMinutes = addMinutesRaw.trim() !== '';
+
+      if (!hasHours && !hasMinutes) {
+        errorDiv.textContent = 'Enter hours and/or minutes.';
         return;
       }
 
-      if (isNaN(addMinutes) || addMinutes < 0 || addMinutes > 59) {
-        errorDiv.textContent = 'Minutes must be between 0 and 59.';
+      const addHours = parseInt(addHoursRaw);
+      const addMinutes = parseInt(addMinutesRaw);
+
+      if (hasHours && (isNaN(addHours) || addHours < -100 || addHours > 100)) {
+        errorDiv.textContent = 'Hours must be between -100 and 100.';
         return;
       }
 
-      const minutes = addHours * 60 + addMinutes;
+      if (hasMinutes && (isNaN(addMinutes) || addMinutes < -59 || addMinutes > 59)) {
+        errorDiv.textContent = 'Minutes must be between -59 and 59.';
+        return;
+      }
+
+      const minutes = (isNaN(addHours) ? 0 : addHours * 60) + (isNaN(addMinutes) ? 0 : addMinutes);
       if (minutes === 0) {
-        errorDiv.textContent = 'Add hours or minutes must be greater than zero.';
+        errorDiv.textContent = 'Change cannot be zero.';
         return;
       }
 
