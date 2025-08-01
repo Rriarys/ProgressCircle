@@ -208,11 +208,16 @@
                     }
 
         /* Мобильная версия */
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             body {
                 margin: 1rem;
                 max-width: 100%;
+                background-color: #e8f5e9;
             }
+
+                body.dark {
+                    background-color: #121622; 
+                }
 
             .inputs-row {
                 flex-direction: column;
