@@ -1,331 +1,463 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Progress Tracker</title>
-  <style>
-    :root {
-      --bg: #ffffff;
-      --fg: #000000;
-      --input-bg: #f0f0f0;
-      --border: #ccc;
-      --bar-bg: #eee;
-      --bar-fill: #4caf50;
-      --bar-overflow: #2196f3;
-      --error: red;
-    }
+    <meta charset="UTF-8" />
+    <title>Progress Tracker</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --fg: #000000;
+            --input-bg: #f0f0f0;
+            --border: #ccc;
+            --bar-bg: #eee;
+            --bar-fill: #4caf50;
+            --bar-overflow: #2196f3;
+            --error: red;
+            --btn-bg: #a8d5a2;
+            --btn-hover-bg: #91c783;
+            --btn-fg: #333;
+        }
 
-    body.dark {
-      --bg: #121212;
-      --fg: #e0e0e0;
-      --input-bg: #1e1e1e;
-      --border: #444;
-      --bar-bg: #333;
-      --bar-fill: #81c784;
-      --bar-overflow: #64b5f6;
-      --error: #ff8a80;
-    }
+        body.dark {
+            --bg: #121212;
+            --fg: #e0e0e0;
+            --input-bg: #1e1e1e;
+            --border: #444;
+            --bar-bg: #333;
+            --bar-fill: #81c784;
+            --bar-overflow: #64b5f6;
+            --error: #ff8a80;
+            --btn-bg: #507950;
+            --btn-hover-bg: #486f47;
+            --btn-fg: #ccc;
+        }
 
-    body {
-      background-color: var(--bg);
-      color: var(--fg);
-      font-family: sans-serif;
-      max-width: 600px;
-      margin: 2rem auto;
-      transition: background 0.3s, color 0.3s;
-      position: relative;
-    }
+        body {
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 2rem auto;
+            transition: background 0.3s, color 0.3s;
+            position: relative;
+        }
 
-    input, button {
-      margin: 0.2rem 0;
-      padding: 0.4rem;
-      box-sizing: border-box;
-      width: 100%;
-      background: var(--input-bg);
-      color: var(--fg);
-      border: 1px solid var(--border);
-    }
+        input, button {
+            margin: 0.2rem 0;
+            padding: 0.4rem;
+            box-sizing: border-box;
+            width: 100%;
+            background: var(--input-bg);
+            color: var(--fg);
+            border: 1px solid var(--border);
+        }
 
-    .diagram {
-      border: 1px solid var(--border);
-      background: var(--input-bg);
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 5px;
-    }
+        .diagram {
+            border: 1px solid var(--border);
+            background: var(--input-bg);
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 5px;
+        }
 
-    .bar {
-      position: relative;
-      height: 20px;
-      background: var(--bar-bg);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 0.5rem;
-    }
+        .bar {
+            position: relative;
+            height: 20px;
+            background: var(--bar-bg);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
 
-    .fill {
-      height: 100%;
-      background: var(--bar-fill);
-      width: 0%;
-      transition: width 0.3s ease;
-      position: relative;
-      z-index: 1;
-    }
+        .fill {
+            height: 100%;
+            background: var(--bar-fill);
+            width: 0%;
+            transition: width 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
 
-    .overflow-fill {
-      position: absolute;
-      height: 100%;
-      background: var(--bar-overflow);
-      border-radius: 10px;
-      top: 0;
-      left: 0;
-      z-index: 2;
-      pointer-events: none;
-    }
+        .overflow-fill {
+            position: absolute;
+            height: 100%;
+            background: var(--bar-overflow);
+            border-radius: 10px;
+            top: 0;
+            left: 0;
+            z-index: 2;
+            pointer-events: none;
+        }
 
-    .small {
-      font-size: 0.8em;
-      color: var(--fg);
-      opacity: 0.7;
-    }
+        .small {
+            font-size: 0.8em;
+            color: var(--fg);
+            opacity: 0.7;
+        }
 
-    .time-info {
-      margin-top: 0.6rem;
-      font-weight: bold;
-      font-family: sans-serif;
-      white-space: nowrap;
-    }
+        .time-info {
+            margin-top: 0.6rem;
+            font-weight: bold;
+            font-family: sans-serif;
+            white-space: nowrap;
+        }
 
-    .inputs-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.6rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+        .inputs-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.6rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
 
-    .inputs-row input {
-      flex: 1 1 auto;
-      width: auto;
-    }
+            .inputs-row input {
+                flex: 1 1 auto;
+                width: auto;
+            }
 
-    input.min-input {
-      width: 45px;
-      min-width: 45px;
-    }
+        input.min-input {
+            width: 45px;
+            min-width: 45px;
+        }
 
-    input.hours-input {
-      width: 70px;
-      min-width: 70px;
-    }
+        input.hours-input {
+            width: 70px;
+            min-width: 70px;
+        }
 
-    .inputs-row button {
-      width: 4.5rem;
-      flex-shrink: 0;
-    }
+        .inputs-row button {
+            width: 4.5rem;
+            flex-shrink: 0;
+        }
 
-    .error-text {
-      color: var(--error);
-      font-size: 0.8rem;
-    }
+        .error-text {
+            color: var(--error);
+            font-size: 0.8rem;
+        }
 
-    #theme-toggle {
-      position: absolute; 
-      float: right; 
-      background: none;
-      border: none;
-      font-size: 1.4rem;
-      cursor: pointer;
-      margin-left: 1rem;
-    }
-  </style>
+        #theme-toggle {
+            position: absolute;
+            float: right;
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            margin-left: 1rem;
+        }
+
+        /* Модалка */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            color: var(--fg);
+            padding: 20px;
+            border-radius: 6px;
+            text-align: center;
+            max-width: 320px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            word-break: break-word;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+
+            .modal-content p {
+                margin-bottom: 20px;
+                font-size: 16px;
+                user-select: all;
+            }
+
+            .modal-content button {
+                padding: 6px 12px;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                min-width: 90px;
+                font-size: 14px;
+                background: var(--btn-bg);
+                color: var(--btn-fg);
+                transition: background 0.2s;
+                width: 100%; 
+                max-width: 180px;
+            }
+
+                .modal-content button:hover {
+                    background: var(--btn-hover-bg);
+                }
+
+                .modal-content button:last-child {
+                    background: #f44336;
+                    color: white;
+                }
+
+                    .modal-content button:last-child:hover {
+                        background: #d32f2f;
+                    }
+
+        /* Мобильная версия */
+        @media (max-width: 480px) {
+            body {
+                margin: 1rem;
+                max-width: 100%;
+            }
+
+            .inputs-row {
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+
+                .inputs-row input, .inputs-row button {
+                    width: 100% !important;
+                }
+
+            input.hours-input, input.min-input {
+                width: 100% !important;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>📈 Progress Tracker <button id="theme-toggle" onclick="toggleTheme()">🌙</button></h1>
+    <h1>📈 Progress Tracker <button id="theme-toggle" onclick="toggleTheme()">🌙</button></h1>
 
-  <h3>Create new diagram</h3>
-  <div>
-    <input id="name" placeholder="Name" />
-    <input id="description" placeholder="Description" />
-    <input id="target" type="number" placeholder="Target hours" />
-    <button onclick="createDiagram()">Create</button>
-  </div>
+    <h3>Create new diagram</h3>
+    <div>
+        <input id="name" placeholder="Name" />
+        <input id="description" placeholder="Description" />
+        <input id="target" type="number" placeholder="Target hours" />
+        <button onclick="createDiagram()">Create</button>
+    </div>
 
-  <h3>Diagrams</h3>
-  <div id="list">Loading...</div>
+    <h3>Diagrams</h3>
+    <div id="list">Loading...</div>
 
-  <script>
-    function toggleTheme() {
-      const isDark = document.body.classList.toggle('dark');
-      localStorage.setItem('theme', isDark ? 'dark' : 'light');
-      document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
-    }
+    <!-- Модалка для AccessKey -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <p id="modal-message"></p>
+            <button id="copy-btn" onclick="copyAccessKey()">Скопировать</button>
+            <button onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
 
-    (function () {
-      const theme = localStorage.getItem('theme');
-      const isDark = theme === 'dark';
-      if (isDark) {
-        document.body.classList.add('dark');
-      }
-      document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
-      });
-    })();
+    <script>
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+        }
 
-    let diagrams = [];
+        (function () {
+            const theme = localStorage.getItem('theme');
+            const isDark = theme === 'dark';
+            if (isDark) {
+                document.body.classList.add('dark');
+            }
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('theme-toggle').textContent = isDark ? '☀️' : '🌙';
+            });
+        })();
 
-    function formatDisplayTime(totalMinutes) {
-      const h = Math.floor(totalMinutes / 60);
-      const m = totalMinutes % 60;
-      if (m === 0) return `${h} hrs`;
-      return `${h} hrs ${m} min`;
-    }
+        let diagrams = [];
+        let lastAccessKey = '';
 
-    async function fetchDiagrams() {
-      const res = await fetch('/diagrams');
-      diagrams = await res.json();
-      renderDiagrams();
-    }
+        function formatDisplayTime(totalMinutes) {
+            const h = Math.floor(totalMinutes / 60);
+            const m = totalMinutes % 60;
+            if (m === 0) return `${h} hrs`;
+            return `${h} hrs ${m} min`;
+        }
 
-    function renderDiagrams() {
-      const list = document.getElementById('list');
-      list.innerHTML = '';
+        async function fetchDiagrams() {
+            const res = await fetch('/diagrams');
+            diagrams = await res.json();
+            renderDiagrams();
+        }
 
-      diagrams.forEach(d => {
-        const percentRaw = (d.accumulatedMinutes / d.targetMinutes) * 100;
-        const percentBase = Math.min(100, percentRaw);
-        const percentOverflow = percentRaw > 100 ? percentRaw - 100 : 0;
+        function renderDiagrams() {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
 
-        const container = document.createElement('div');
-        container.className = 'diagram';
+            // Новые сверху
+            [...diagrams].reverse().forEach(d => {
+                const percentRaw = (d.accumulatedMinutes / d.targetMinutes) * 100;
+                const percentBase = Math.min(100, percentRaw);
+                const percentOverflow = percentRaw > 100 ? percentRaw - 100 : 0;
 
-        container.innerHTML = `
-          <strong>${d.name}</strong><br/>
-          <span class="small">${d.description}</span><br/>
-          <div class="bar">
-            <div class="fill" style="width:${percentBase}%"></div>
-            ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
-          </div>
-          <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
-          <div class="inputs-row">
-            <input placeholder="AccessKey" id="key-${d.name}" />
-            <input type="number" min="-100" max="100" placeholder="hrs" class="hours-input" id="add-hours-${d.name}" />
-            <input type="number" min="-59" max="59" placeholder="min" class="min-input" id="add-minutes-${d.name}" />
-            <button onclick="updateDiagram('${d.name}')">Add</button>
-            <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
-          </div>
-          <div class="error-text" id="error-${d.name}"></div>
-        `;
+                const container = document.createElement('div');
+                container.className = 'diagram';
 
-        list.appendChild(container);
-      });
-    }
+                container.innerHTML = `
+                  <strong>${d.name}</strong><br/>
+                  <span class="small">${d.description}</span><br/>
+                  <div class="bar">
+                    <div class="fill" style="width:${percentBase}%"></div>
+                    ${percentOverflow > 0 ? `<div class="overflow-fill" style="width:${percentOverflow}%"></div>` : ''}
+                  </div>
+                  <div class="time-info">${formatDisplayTime(d.accumulatedMinutes)} / ${formatDisplayTime(d.targetMinutes)} (${percentRaw.toFixed(0)}%)</div>
+                  <div class="inputs-row">
+                    <input placeholder="AccessKey" id="key-${d.name}" />
+                    <input type="number" min="-100" max="100" placeholder="hrs" class="hours-input" id="add-hours-${d.name}" />
+                    <input type="number" min="-59" max="59" placeholder="min" class="min-input" id="add-minutes-${d.name}" />
+                    <button onclick="updateDiagram('${d.name}')">Add</button>
+                    <button onclick="deleteDiagram('${d.name}')" style="background:#f44336;color:#fff;">Del</button>
+                  </div>
+                  <div class="error-text" id="error-${d.name}"></div>
+                `;
 
-    async function createDiagram() {
-      const name = document.getElementById('name').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const targetRaw = document.getElementById('target').value;
-      const targetHours = parseInt(targetRaw);
+                list.appendChild(container);
+            });
+        }
 
-      if (!name || !description || isNaN(targetHours) || targetHours <= 0) {
-        alert('Please fill all fields with valid data.');
-        return;
-      }
+        async function createDiagram() {
+            const name = document.getElementById('name').value.trim();
+            const description = document.getElementById('description').value.trim();
+            const targetRaw = document.getElementById('target').value;
+            const targetHours = parseInt(targetRaw);
 
-      const targetMinutes = targetHours * 60;
+            if (!name || !description || isNaN(targetHours) || targetHours <= 0) {
+                alert('Please fill all fields with valid data.');
+                return;
+            }
 
-      const res = await fetch('/diagrams', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description, targetMinutes })
-      });
+            const targetMinutes = targetHours * 60;
 
-      const result = await res.json();
-      if (res.ok) {
-        alert('Created! AccessKey: ' + result.accessKey);
+            const res = await fetch('/diagrams', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, description, targetMinutes })
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                lastAccessKey = result.accessKey;
+                showModal(lastAccessKey);
+                fetchDiagrams();
+            } else {
+                alert(result.detail || 'Error creating diagram');
+            }
+        }
+
+        async function updateDiagram(name) {
+            const accessKey = document.getElementById('key-' + name).value.trim();
+            const addHoursRaw = document.getElementById(`add-hours-${name}`).value;
+            const addMinutesRaw = document.getElementById(`add-minutes-${name}`).value;
+            const errorDiv = document.getElementById(`error-${name}`);
+            errorDiv.textContent = '';
+
+            if (!accessKey) {
+                errorDiv.textContent = 'AccessKey required.';
+                return;
+            }
+
+            const hasHours = addHoursRaw.trim() !== '';
+            const hasMinutes = addMinutesRaw.trim() !== '';
+
+            if (!hasHours && !hasMinutes) {
+                errorDiv.textContent = 'Enter hours and/or minutes.';
+                return;
+            }
+
+            const addHours = parseInt(addHoursRaw);
+            const addMinutes = parseInt(addMinutesRaw);
+
+            if (hasHours && (isNaN(addHours) || addHours < -100 || addHours > 100)) {
+                errorDiv.textContent = 'Hours must be between -100 and 100.';
+                return;
+            }
+
+            if (hasMinutes && (isNaN(addMinutes) || addMinutes < -59 || addMinutes > 59)) {
+                errorDiv.textContent = 'Minutes must be between -59 and 59.';
+                return;
+            }
+
+            const minutes = (isNaN(addHours) ? 0 : addHours * 60) + (isNaN(addMinutes) ? 0 : addMinutes);
+            if (minutes === 0) {
+                errorDiv.textContent = 'Change cannot be zero.';
+                return;
+            }
+
+            const res = await fetch('/diagrams', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, accumulatedMinutes: minutes, accessKey })
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                fetchDiagrams();
+            } else {
+                errorDiv.textContent = result.detail || 'Error updating diagram';
+            }
+        }
+
+        async function deleteDiagram(name) {
+            if (!confirm(`Delete diagram "${name}"? This action cannot be undone.`)) return;
+
+            const accessKey = document.getElementById('key-' + name).value.trim();
+            if (!accessKey) {
+                alert('AccessKey required to delete');
+                return;
+            }
+
+            const res = await fetch('/diagrams', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, accessKey })
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                fetchDiagrams();
+            } else {
+                alert(result.detail || 'Error deleting diagram');
+            }
+        }
+
+        function showModal(key) {
+            const modal = document.getElementById('modal');
+            const msg = document.getElementById('modal-message');
+            const copyBtn = document.getElementById('copy-btn');
+
+            msg.textContent = key;
+            copyBtn.textContent = 'Скопировать';
+            modal.style.display = 'flex';
+
+            // Сброс текста кнопки копирования если закрывали ранее
+            copyBtn.disabled = false;
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function copyAccessKey() {
+            const copyBtn = document.getElementById('copy-btn');
+            navigator.clipboard.writeText(lastAccessKey).then(() => {
+                copyBtn.textContent = 'Скопировано!';
+                copyBtn.disabled = true;
+                setTimeout(() => {
+                    if (copyBtn) {
+                        copyBtn.textContent = 'Скопировать';
+                        copyBtn.disabled = false;
+                    }
+                }, 1500);
+            });
+        }
+
         fetchDiagrams();
-      } else {
-        alert(result.detail || 'Error creating diagram');
-      }
-    }
-
-    async function updateDiagram(name) {
-      const accessKey = document.getElementById('key-' + name).value.trim();
-      const addHoursRaw = document.getElementById(`add-hours-${name}`).value;
-      const addMinutesRaw = document.getElementById(`add-minutes-${name}`).value;
-      const errorDiv = document.getElementById(`error-${name}`);
-      errorDiv.textContent = '';
-
-      if (!accessKey) {
-        errorDiv.textContent = 'AccessKey required.';
-        return;
-      }
-
-      const hasHours = addHoursRaw.trim() !== '';
-      const hasMinutes = addMinutesRaw.trim() !== '';
-
-      if (!hasHours && !hasMinutes) {
-        errorDiv.textContent = 'Enter hours and/or minutes.';
-        return;
-      }
-
-      const addHours = parseInt(addHoursRaw);
-      const addMinutes = parseInt(addMinutesRaw);
-
-      if (hasHours && (isNaN(addHours) || addHours < -100 || addHours > 100)) {
-        errorDiv.textContent = 'Hours must be between -100 and 100.';
-        return;
-      }
-
-      if (hasMinutes && (isNaN(addMinutes) || addMinutes < -59 || addMinutes > 59)) {
-        errorDiv.textContent = 'Minutes must be between -59 and 59.';
-        return;
-      }
-
-      const minutes = (isNaN(addHours) ? 0 : addHours * 60) + (isNaN(addMinutes) ? 0 : addMinutes);
-      if (minutes === 0) {
-        errorDiv.textContent = 'Change cannot be zero.';
-        return;
-      }
-
-      const res = await fetch('/diagrams', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, accumulatedMinutes: minutes, accessKey })
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        fetchDiagrams();
-      } else {
-        errorDiv.textContent = result.detail || 'Error updating diagram';
-      }
-    }
-
-    async function deleteDiagram(name) {
-      if (!confirm(`Delete diagram "${name}"? This action cannot be undone.`)) return;
-
-      const accessKey = document.getElementById('key-' + name).value.trim();
-      if (!accessKey) {
-        alert('AccessKey required to delete');
-        return;
-      }
-
-      const res = await fetch('/diagrams', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, accessKey })
-      });
-
-      const result = await res.json();
-      if (res.ok) {
-        fetchDiagrams();
-      } else {
-        alert(result.detail || 'Error deleting diagram');
-      }
-    }
-
-    fetchDiagrams();
-  </script>
+    </script>
 </body>
 </html>
